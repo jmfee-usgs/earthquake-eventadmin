@@ -12,6 +12,7 @@
   "scripts": {
     "test": "grunt test"
   },
+  "license": "CC0-1.0",
   "dependencies": {},
   "devDependencies": {
     "chai": "~1.7.0",
