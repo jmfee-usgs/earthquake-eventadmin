@@ -1,15 +1,13 @@
 ## Docker file to build eventadmin container
 
-# NOTE: This container includes a configuration that is enough to get started.
-# Production users should modify their configuration using "docker cp".
-
 FROM debian:jessie
 MAINTAINER "Jeremy Fee" <jmfee@usgs.gov>
-LABEL dockerfile_version="v0.1.0"
+LABEL dockerfile_version="v0.1.1"
 
 
 # install dependencies
-RUN apt-get update -y \
+RUN apt-key update -y \
+    && apt-get update -y \
     && apt-get install -y \
         bzip2 \
         curl \
@@ -21,25 +19,25 @@ RUN apt-get update -y \
     && curl -o- \
         https://raw.githubusercontent.com/creationix/nvm/v0.31.2/install.sh \
         | /bin/bash \
-    && /bin/bash --login -c "nvm install 4.2.4"
+    && /bin/bash --login -c " \
+        nvm install 4.2.4 \
+        && npm install -g grunt-cli"
 
+# copy application (ignores set in .dockerignore)
+COPY . /earthquake-eventadmin
 
-# install, configure, and build eventadmin
-RUN /bin/bash --login -c "\
-    git clone \
-        https://github.com/usgs/earthquake-eventadmin.git \
-        /earthquake-eventadmin \
-    && cd /earthquake-eventadmin \
-    && npm install -g grunt-cli \
+# configure application
+RUN /bin/bash --login -c " \
+    cd /earthquake-eventadmin \
     && npm install \
     && php ./src/lib/pre-install.php --non-interactive \
-    && grunt build clean:dist concurrent:dist" \
-# clean up unused large files
+    && grunt build clean:dist concurrent:dist \
     && rm -r \
         /earthquake-eventadmin/dist/lib/ProductClient.jar \
         /earthquake-eventadmin/node_modules/grunt-mocha-phantomjs \
         /root/.npm \
-        /tmp/npm*
+        /tmp/npm* \
+    "
 
 
 WORKDIR /earthquake-eventadmin
